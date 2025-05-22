@@ -4,7 +4,7 @@
 #include "Forcefields.h"
 #include "Force_functors.h"
 
-template <typename EnabledBondedForce_T, typename T, typename... Args>
+template <typename EnableBondedForceField_T, typename T, typename... Args>
 __global__ void calculateBondedForces(
 		T * __restrict__ d_forces, 
 		const int num_bonds, 
@@ -16,7 +16,7 @@ __global__ void calculateBondedForces(
 	int2 pair = make_int2(0, 0);
 	float3 force = make_float3(0.0f, 0.0f, 0.0f);
 
-	if constexpr (EnabledBondedForce_T::EnableHarmonicBond) {
+	if constexpr (EnableBondedForceField_T::EnableHarmonicBond) {
 		HarmonicBondInfo harmonicBondInfo_ = HarmonicBondForceField(args);
 		pair = harmonicBondInfo_.p;
 		force = harmonicBondInfo_.f;

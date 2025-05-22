@@ -5,7 +5,17 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 
+#include <iostream>
+#include <vector>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <map>
+#include <stdexcept>
+#include <algorithm>
+
 #include "System.h"
+#include "Forcefields.h"
 
 typedef struct {
 
@@ -19,6 +29,7 @@ typedef struct {
 
 typedef struct {
     thrust::host_vector<float4> posq;
+    EnableBondedForceFields EnableBondedForceFields_;
     int num_particles = 0;
     int num_bonds;
 } CpuData;
@@ -34,9 +45,11 @@ class Simulation {
 
         int get_num_particles() {return cpuData_.num_particles;}
 
-	void set_num_bonds(int num_bonds) {
-		cpuData_.num_bonds = num_bonds;
-	}	
+	    void set_num_bonds(int num_bonds) {
+		    cpuData_.num_bonds = num_bonds;
+	    }
+
+        void read_forcefields(std::string & input_filename);    
 
     private:
         GpuData gpuData_;
@@ -73,7 +86,7 @@ void Simulation::run(System system, int num_steps) {
 
     set_num_bonds(system.get_bondList().r0.size());
 
-
+    // run simulation
     for (int i = 0; i < num_steps; i++) {
         // empty process
     }
@@ -84,5 +97,78 @@ void Simulation::set_positions(float x, float y, float z, float q) {
     cpuData_.posq.push_back(posq);
     cpuData_.num_particles++;
 }
+
+void Simulation::read_forcefields(std::string & input_filename) {
+
+    std::ifstream ifs(input_filename);
+    if (!ifs) {
+        std::cerr << "[ error ]: Could not open file." << std::endl;
+        exit(-1);
+    }
+
+    std::string line;
+    std::vector<std::string> BondedForceFieldNameList;
+
+    /*
+     * input file example
+     * 
+     * # bonded force field setup
+     * [bondedFF] HarmonicBond 
+     * 
+    */
+
+    int line_num = 0;
+    while (std::getline(ifs, line)) {
+        line_num++;
+
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+
+        std::stringstream ss(line);
+        std::string ff;
+        ss >> ff;
+        if (ff == "[bondedFF]") {
+            if (BondedForceFieldNameList.size() != 0) {
+                std::cerr << "[ error ]: Definition conflict detected: [bondedFF]" << std::endl;
+                exit(-1);
+            }
+            std::string bonded_ff;
+            while (ss >> bonded_ff) {
+                BondedForceFieldNameList.push_back(bonded_ff);
+            }
+        }
+    }
+
+    // output enabled force fields
+    std::cout << "[ bonded force field ]: ";
+
+    for (int i = 0; i < BondedForceFieldNameList.size(); i++) {
+        std::cout << BondedForceFieldNameList[i] << " ";
+    }
+    std::cout << std::endl;
+
+    cpuData_.EnableBondedForceFields_.EnableHarmonicBond = (std::find(
+               BondedForceFieldNameList.begin(), 
+               BondedForceFieldNameList.end(), 
+               "HarmonicBond"
+               )
+            != BondedForceFieldNameList.end());
+
+    cpuData_.EnableBondedForceFields_.EnableCosineAngle = (std::find(
+               BondedForceFieldNameList.begin(), 
+               BondedForceFieldNameList.end(), 
+               "CosineAngle"
+               )
+            != BondedForceFieldNameList.end());
+
+    cpuData_.EnableBondedForceFields_.EnableDihedral = (std::find(
+                BondedForceFieldNameList.begin(), 
+                BondedForceFieldNameList.end(), 
+                "Dihedral"
+                )
+            != BondedForceFieldNameList.end());
+}
+
 
 #endif // __SIMULATION_CUH__

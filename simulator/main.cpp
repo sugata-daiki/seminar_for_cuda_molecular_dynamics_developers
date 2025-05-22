@@ -1,10 +1,23 @@
 #include <iostream>
-#include "Simulation.cuh"
+#include <vector>
+#include <string>
 
-int main(void) {
+#include "Simulation.cuh"
+#include "InputParser.h"
+
+int main(int argc, char* argv[]) {
 
     System system;
     Simulation simulation;
+    
+    if (argc < 2) {
+        std::cerr << "[ error ]: No input file specified." << std::endl;
+        exit(-1);
+    }
+
+    std::string ff_input = argv[1];
+
+    simulation.read_forcefields(ff_input);
 
     int N_particles = 10000;
 

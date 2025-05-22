@@ -1,11 +1,21 @@
 #ifndef __FORCEFIELDS_H__
 #define __FORCEFIELDS_H__
 
-enum class BondedForceFieldType {
-    None = 0,
-    HarmonicBond;
+enum class BondedForceField {
+    HarmonicBond, 
+    CosineAngle,
+    Dihedral,
+    Unknown
 };
 
-template <bool EnableHarmonicBond = false>
-struct EnabledBondedForceFields {};
+typedef struct {
+    bool EnableHarmonicBond;
+    bool EnableCosineAngle;
+    bool EnableDihedral;
+} EnableBondedForceFields;
+
+template <bool EnableHarmonicBond = false, 
+          bool EnableCosineAngle = false, 
+          bool EnableDihedral = false>
+struct EnableBondedForceFields_T {};
 #endif // __FORCEFIELDS_H__
