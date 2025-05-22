@@ -28,7 +28,7 @@ class Simulation {
         Simulation() {};
         ~Simulation() {};
 
-        void run(int num_steps);
+        void run(System system, int num_steps);
 
         void set_positions(float x, float y, float z, float q);
 
@@ -55,7 +55,7 @@ void Simulation::run(System system, int num_steps) {
     // H to D memory transfer (bond infomation)
     cudaMemcpy(
 	    thrust::raw_pointer_cast(gpuData_.r0.data()),
-	    thrust::raw_pointer_cast(system.get_bondList().r0.data())
+	    thrust::raw_pointer_cast(system.get_bondList().r0.data()), 
 	    sizeof(float)*system.get_bondList().r0.size(),
 	    cudaMemcpyDefault);
 
@@ -66,8 +66,8 @@ void Simulation::run(System system, int num_steps) {
 	    cudaMemcpyDefault);
 
     cudaMemcpy(
-	    thrust::raw_poitner_cast(gpuData_.pair.data()),
-	    thrust::raw_pinter_cast(system.get_bondList().pair.data()), 
+	    thrust::raw_pointer_cast(gpuData_.pair.data()),
+	    thrust::raw_pointer_cast(system.get_bondList().pair.data()), 
 	    sizeof(int2)*system.get_bondList().pair.size(), 
 	    cudaMemcpyDefault);
 

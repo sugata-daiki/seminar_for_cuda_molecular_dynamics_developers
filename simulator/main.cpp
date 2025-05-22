@@ -20,6 +20,6 @@ int main(void) {
     }
 
     std::cout << simulation.get_num_particles() << std::endl;
-    simulation.run(1000);
+    simulation.run(system, 1000);
 
 }
