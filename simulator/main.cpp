@@ -1,5 +1,4 @@
 #include <iostream>
-#include "System.h"
 #include "Simulation.cuh"
 
 int main(void) {

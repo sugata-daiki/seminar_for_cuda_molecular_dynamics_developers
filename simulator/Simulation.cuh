@@ -5,10 +5,15 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 
+#include "System.h"
+
 typedef struct {
 
     thrust::device_vector<float4> posq;
     thrust::device_vector<float3> force;
+    thrust::device_vector<float> r0;
+    thrust::device_vector<float> kb;
+    thrust::device_vector<int2> pair;
     
 } GpuData;
 
@@ -33,7 +38,7 @@ class Simulation {
         CpuData cpuData_;
 };
 
-void Simulation::run(int num_steps) {
+void Simulation::run(System system, int num_steps) {
 
     cudaMemcpy(
             thrust::raw_pointer_cast(gpuData_.posq.data()),
