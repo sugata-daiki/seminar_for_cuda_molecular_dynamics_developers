@@ -1,5 +1,9 @@
+#ifndef __PARTICLEDATAMANAGER_H__
+#define __PARTICLEDATAMANAGER_H__
+
 #include <vector>
 #include <string>
+#include "ParameterManager.cuh"
 
 struct Particle {
     int id;
@@ -20,7 +24,14 @@ class ParticleDataManager {
             particle_type_ids_.push_back(particle_type_id);
         }
 
+        void set_bond(bond b) {
+            bonds_.push_back(b);
+        }
+
     private:
         std::vector<int> particle_ids_;
         std::vector<int> particle_type_ids_;
+        std::vector<bond> bonds_;
 };
+
+#endif // __PARTICLEDATAMANAGER_H__

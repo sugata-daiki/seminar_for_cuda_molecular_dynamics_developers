@@ -1,6 +1,24 @@
+#ifndef __PARAMETERMANAGER_CUH__
+#define __PARAMETERMANAGER_CUH__
+
 #include <string>
 #include <vector>
 #include <map>
+
+#include <thrust/host_vector.h>
+
+typedef struct {
+    float r0;
+    float kb;
+    int id_i;
+    int id_j;
+} bond;
+
+typedef struct {
+    thrust::host_vector<float> r0;
+    thrust::host_vector<float> kb;
+    thrust::host_vector<int2> pair;
+} bond_SOA;
 
 class ParameterManager {
     public:
@@ -21,9 +39,18 @@ class ParameterManager {
         }
     }
 
+    void store_bondInfo(bond b) {
+        bondList.r0.push_back(b.r0);
+        bondList.kb.push_back(b.kb);
+        bondList.pair.push_back({b.id_i, b.id_j});
+    }
+
 
     private:
         std::map<std::string, int> type_name_to_id_;
         std::vector<std::string> type_id_to_name_;
         int next_type_id_;
+        bond_SOA bondList;
 };
+
+#endif // __PARAMETERMANAGER_CUH__
