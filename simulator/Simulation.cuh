@@ -20,6 +20,7 @@ typedef struct {
 typedef struct {
     thrust::host_vector<float4> posq;
     int num_particles = 0;
+    int num_bonds;
 } CpuData;
 
 class Simulation {
@@ -33,6 +34,10 @@ class Simulation {
 
         int get_num_particles() {return cpuData_.num_particles;}
 
+	void set_num_bonds(int num_bonds) {
+		cpuData_.num_bonds = num_bonds;
+	}	
+
     private:
         GpuData gpuData_;
         CpuData cpuData_;
@@ -40,11 +45,34 @@ class Simulation {
 
 void Simulation::run(System system, int num_steps) {
 
+    // H to D memory transfer (position)
     cudaMemcpy(
             thrust::raw_pointer_cast(gpuData_.posq.data()),
             thrust::raw_pointer_cast(cpuData_.posq.data()),
             cpuData_.num_particles*sizeof(float4),
             cudaMemcpyDefault);
+
+    // H to D memory transfer (bond infomation)
+    cudaMemcpy(
+	    thrust::raw_pointer_cast(gpuData_.r0.data()),
+	    thrust::raw_pointer_cast(system.get_bondList().r0.data())
+	    sizeof(float)*system.get_bondList().r0.size(),
+	    cudaMemcpyDefault);
+
+    cudaMemcpy(
+	    thrust::raw_pointer_cast(gpuData_.kb.data()), 
+	    thrust::raw_pointer_cast(system.get_bondList().kb.data()), 
+	    sizeof(float)*system.get_bondList().kb.size(),
+	    cudaMemcpyDefault);
+
+    cudaMemcpy(
+	    thrust::raw_poitner_cast(gpuData_.pair.data()),
+	    thrust::raw_pinter_cast(system.get_bondList().pair.data()), 
+	    sizeof(int2)*system.get_bondList().pair.size(), 
+	    cudaMemcpyDefault);
+
+    set_num_bonds(system.get_bondList().r0.size());
+
 
     for (int i = 0; i < num_steps; i++) {
         // empty process

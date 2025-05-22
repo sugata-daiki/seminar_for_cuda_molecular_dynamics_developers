@@ -45,6 +45,9 @@ class ParameterManager {
         bondList.pair.push_back({b.id_i, b.id_j});
     }
 
+    bond_SOA get_bondList() const {
+	    return bondList;
+    }
 
     private:
         std::map<std::string, int> type_name_to_id_;
