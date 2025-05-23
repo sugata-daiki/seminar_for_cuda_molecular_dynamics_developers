@@ -11,21 +11,25 @@ class System : public ParameterManager{
         System();
         ~System();
 
-        void add_particle(const std::string& particle_type, int id) {
+        void add_particle(const std::string& particle_type, float diffusion_coefficient, int id) {
 
             auto particle_type_id = get_or_assign_particle_type_id(particle_type);
 
             particleDataManager_.set_particle_id(id);
             particleDataManager_.set_particle_type_id(particle_type_id);
+            particleDataManager_.set_diffusion_coefficient(diffusion_coefficient);
 
         }
 
         void add_bond(float r0, float kb, int id_i, int id_j);
-
+        void set_temperature(float temperature) {
+            temperature_ = temperature;
+        }
 
 
     private:
         ParticleDataManager particleDataManager_;
+        float temperature_;
 };
 
 
