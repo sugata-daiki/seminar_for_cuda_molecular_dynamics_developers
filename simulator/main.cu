@@ -3,7 +3,6 @@
 #include <string>
 
 #include "Simulation.cuh"
-#include "InputParser.h"
 
 int main(int argc, char* argv[]) {
 

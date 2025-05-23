@@ -1,2 +1,2 @@
 # bonded force field setup
-[bondedFF] HarmonicBond CosineAngle
+[bondedFF] HarmonicBond

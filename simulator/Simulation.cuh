@@ -15,24 +15,9 @@
 #include <algorithm>
 
 #include "System.h"
-#include "Forcefields.h"
+#include "Containers.cuh"
+#include "cudaSystem.cuh"
 
-typedef struct {
-
-    thrust::device_vector<float4> posq;
-    thrust::device_vector<float3> force;
-    thrust::device_vector<float> r0;
-    thrust::device_vector<float> kb;
-    thrust::device_vector<int2> pair;
-    
-} GpuData;
-
-typedef struct {
-    thrust::host_vector<float4> posq;
-    EnableBondedForceFields EnableBondedForceFields_;
-    int num_particles = 0;
-    int num_bonds;
-} CpuData;
 
 class Simulation {
     public:
@@ -88,7 +73,8 @@ void Simulation::run(System system, int num_steps) {
 
     // run simulation
     for (int i = 0; i < num_steps; i++) {
-        // empty process
+        // bonded interaction
+        calculateBondedForcesH(gpuData_, cpuData_);
     }
 }
 

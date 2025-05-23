@@ -1,12 +1,14 @@
 #ifndef __BONDED_FORCE_KERNELS_CUH__
 #define __BONDED_FORCE_KERNELS_CUH__
 
+#include <cuda_runtime.h>
 #include "Forcefields.h"
-#include "Force_functors.h"
+#include "Operations.cuh"
+#include "Force_functors.cuh"
 
-template <typename EnableBondedForceField_T, typename T, typename... Args>
-__global__ void calculateBondedForces(
-		T * __restrict__ d_forces, 
+template <bool EnableHarmonicBond, typename T, typename... Args>
+__global__ void calculateBondedForcesD(
+		T * __restrict__ d_force, 
 		const int num_bonds, 
 		Args... args) {
 
@@ -16,8 +18,10 @@ __global__ void calculateBondedForces(
 	int2 pair = make_int2(0, 0);
 	float3 force = make_float3(0.0f, 0.0f, 0.0f);
 
-	if constexpr (EnableBondedForceField_T::EnableHarmonicBond) {
-		HarmonicBondInfo harmonicBondInfo_ = HarmonicBondForceField(args);
+	if constexpr (EnableHarmonicBond) {
+        
+        HarmonicBondForceField harmonicForceField_(args...);
+        HarmonicBondInfo harmonicBondInfo_ = harmonicForceField_(bond_idx);
 		pair = harmonicBondInfo_.p;
 		force = harmonicBondInfo_.f;
 
