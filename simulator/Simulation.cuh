@@ -101,15 +101,12 @@ void Simulation::load_diffusion_coefficients(const std::vector<float> & diffusio
         std::cerr << "[ error ]: Please set timestep." << std::endl;
         exit(-1);
     }
-    for (int i = 0; i < diffusion_coefficients.size(); i++) {
-        cpuData_.thermalFluctuation.push_back(std::sqrt(2.0*cpuData_.timestep*diffusion_coefficients[i]));
-    }
 
-    gpuData_.thermalFluctuation.resize(cpuData_.thermalFluctuation.size());
+    gpuData_.diffusion_coefficient.resize(diffusion_coefficients.size());
     thrust::copy(
-        cpuData_.thermalFluctuation.begin(),
-        cpuData_.thermalFluctuation.end(), 
-        gpuData_.thermalFluctuation.begin());
+        diffusion_coefficients.begin(),
+        diffusion_coefficients.end(), 
+        gpuData_.diffusion_coefficient.begin());
 }
 
 void Simulation::load_positions() {

@@ -58,13 +58,13 @@ void BrownianIntegratorH(GpuData & gpu_data, CpuData & cpu_data) {
         float4 * d_posq = thrust::raw_pointer_cast(gpu_data.posq.data());
         float3 * d_force = thrust::raw_pointer_cast(gpu_data.force.data());
         
-        float * d_thermalFluctuation = thrust::raw_pointer_cast(gpu_data.thermalFluctuation.data());
+        float * d_diffusion_coefficient = thrust::raw_pointer_cast(gpu_data.diffusion_coefficient.data());
         curandState * d_states = thrust::raw_pointer_cast(gpu_data.states.data());
         
         BrownianIntegratorD<<<numBlocks, numThreads>>>(
                 d_posq, 
                 d_force, 
-                d_thermalFluctuation, 
+                d_diffusion_coefficient, 
                 d_states, 
                 cpu_data.num_particles);
 }

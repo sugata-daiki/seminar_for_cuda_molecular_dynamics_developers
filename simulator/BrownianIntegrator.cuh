@@ -15,7 +15,7 @@ __global__ void init_random_statesD(
 __global__ void BrownianIntegratorD(
         float4 * __restrict__ d_posq, 
         float3 * __restrict__ d_force, 
-        float * __restrict__ d_thermalFluctuation, 
+        float * __restrict__ d_diffusion_coefficient, 
         curandState * __restrict__ d_states, 
         int num_particles) {
 
@@ -25,7 +25,8 @@ __global__ void BrownianIntegratorD(
     curandState localState = d_states[particle_idx];
 
     float4 posq = d_posq[particle_idx];
-    float3 pos = params_.inv_kbT*d_force[particle_idx] + d_thermalFluctuation[particle_idx]*make_float3(
+    float diffusion_coefficient = d_diffusion_coefficient[particle_idx];
+    float3 pos = diffusion_coefficient*params_.inv_kbT*d_force[particle_idx] + diffusion_coefficient*make_float3(
             curand_normal(&localState), 
             curand_normal(&localState), 
             curand_normal(&localState))
