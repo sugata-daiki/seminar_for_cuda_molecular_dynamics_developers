@@ -33,7 +33,6 @@ __global__ void calculateBondedForcesD(
 		atomicAdd(&d_force[pair.y].y, - force.y);
 		atomicAdd(&d_force[pair.y].z, - force.z);
 	}
-
 	return;
 }
 

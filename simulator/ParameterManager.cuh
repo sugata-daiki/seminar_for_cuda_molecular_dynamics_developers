@@ -7,6 +7,8 @@
 
 #include <thrust/host_vector.h>
 
+#include "Constants.cuh"
+
 typedef struct {
     float r0;
     float kb;
@@ -45,8 +47,24 @@ class ParameterManager {
         bondList.pair.push_back({b.id_i, b.id_j});
     }
 
+    void store_diffusionInfo(float diffusion_coefficient) {
+        diffusion_coefficients_.push_back(diffusion_coefficient);
+    }
+
     bond_SOA get_bondList() const {
 	    return bondList;
+    }
+
+    std::vector<float> get_diffusion_coefficients() {
+        return diffusion_coefficients_;
+    }
+
+    void set_params(float temperature) {
+        simParams_.inv_kbT = 1.0/(k_b*temperature);
+    }
+
+    SimParams get_params() {
+        return simParams_;
     }
 
     private:
@@ -54,6 +72,9 @@ class ParameterManager {
         std::vector<std::string> type_id_to_name_;
         int next_type_id_;
         bond_SOA bondList;
+        std::vector<float> diffusion_coefficients_;
+
+        SimParams simParams_;
 };
 
 #endif // __PARAMETERMANAGER_CUH__

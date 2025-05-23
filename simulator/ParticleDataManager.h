@@ -8,7 +8,7 @@
 struct Particle {
     int id;
     int particleType_id;
-    float diffusion_coefficient;
+    float diffusion_constant;
 };
 
 class ParticleDataManager {
@@ -25,10 +25,6 @@ class ParticleDataManager {
             particle_type_ids_.push_back(particle_type_id);
         }
 
-        void set_diffusion_coefficient(float diffusion_coefficient) {
-            diffusion_coefficients_.push_back(diffusion_coefficient);
-        }
-
         void set_bond(bond b) {
             bonds_.push_back(b);
         }
@@ -36,7 +32,6 @@ class ParticleDataManager {
     private:
         std::vector<int> particle_ids_;
         std::vector<int> particle_type_ids_;
-        std::vector<float> diffusion_coefficients_;
         std::vector<bond> bonds_;
 };
 

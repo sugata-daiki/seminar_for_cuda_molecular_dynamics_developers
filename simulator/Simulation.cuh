@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
+#include <thrust/copy.h>
 
 #include <iostream>
 #include <vector>
@@ -26,62 +27,126 @@ class Simulation {
 
         void run(System system, int num_steps);
 
+        void set_timestep(float timestep) {
+            cpuData_.timestep = timestep;
+        }
+
+        void set_seed(int seed) {
+            cpuData_.seed = seed;
+        }
+
         void set_positions(float x, float y, float z, float q);
 
         int get_num_particles() {return cpuData_.num_particles;}
 
-	    void set_num_bonds(int num_bonds) {
-		    cpuData_.num_bonds = num_bonds;
-	    }
-
         void read_forcefields(std::string & input_filename);    
 
     private:
+        void set_num_bonds(int num_bonds) {
+            cpuData_.num_bonds = num_bonds;
+        }
+
+        void load_positions();
+
+        void load_diffusion_coefficients(const std::vector<float> & diffusion_coefficients);
+
+        void load_bond_params(System system);
+
+        void load_constant_params(System system);
+
+        void set_random_states();
+
         GpuData gpuData_;
         CpuData cpuData_;
 };
 
 void Simulation::run(System system, int num_steps) {
 
-    // H to D memory transfer (position)
-    cudaMemcpy(
-            thrust::raw_pointer_cast(gpuData_.posq.data()),
-            thrust::raw_pointer_cast(cpuData_.posq.data()),
-            cpuData_.num_particles*sizeof(float4),
-            cudaMemcpyDefault);
+    load_positions();
 
-    // H to D memory transfer (bond infomation)
-    cudaMemcpy(
-	    thrust::raw_pointer_cast(gpuData_.r0.data()),
-	    thrust::raw_pointer_cast(system.get_bondList().r0.data()), 
-	    sizeof(float)*system.get_bondList().r0.size(),
-	    cudaMemcpyDefault);
-
-    cudaMemcpy(
-	    thrust::raw_pointer_cast(gpuData_.kb.data()), 
-	    thrust::raw_pointer_cast(system.get_bondList().kb.data()), 
-	    sizeof(float)*system.get_bondList().kb.size(),
-	    cudaMemcpyDefault);
-
-    cudaMemcpy(
-	    thrust::raw_pointer_cast(gpuData_.pair.data()),
-	    thrust::raw_pointer_cast(system.get_bondList().pair.data()), 
-	    sizeof(int2)*system.get_bondList().pair.size(), 
-	    cudaMemcpyDefault);
+    load_bond_params(system);
 
     set_num_bonds(system.get_bondList().r0.size());
+
+    load_diffusion_coefficients(system.get_diffusion_coefficients());
+
+    load_constant_params(system);
+
+    set_random_states();
 
     // run simulation
     for (int i = 0; i < num_steps; i++) {
         // bonded interaction
         calculateBondedForcesH(gpuData_, cpuData_);
+        BrownianIntegratorH(gpuData_, cpuData_);
+
     }
+
 }
 
 void Simulation::set_positions(float x, float y, float z, float q) {
     float4 posq = {x, y, z, q};
     cpuData_.posq.push_back(posq);
     cpuData_.num_particles++;
+}
+
+void Simulation::set_random_states() {
+    gpuData_.states.resize(cpuData_.num_particles);
+
+    init_random_statesH(gpuData_, cpuData_);
+}
+
+void Simulation::load_diffusion_coefficients(const std::vector<float> & diffusion_coefficients) {
+    if (cpuData_.timestep == 0.0) {
+        std::cerr << "[ error ]: Please set timestep." << std::endl;
+        exit(-1);
+    }
+    for (int i = 0; i < diffusion_coefficients.size(); i++) {
+        cpuData_.thermalFluctuation.push_back(std::sqrt(2.0*cpuData_.timestep*diffusion_coefficients[i]));
+    }
+
+    gpuData_.thermalFluctuation.resize(cpuData_.thermalFluctuation.size());
+    thrust::copy(
+        cpuData_.thermalFluctuation.begin(),
+        cpuData_.thermalFluctuation.end(), 
+        gpuData_.thermalFluctuation.begin());
+}
+
+void Simulation::load_positions() {
+    gpuData_.posq.resize(cpuData_.posq.size());
+    gpuData_.force.resize(cpuData_.posq.size());
+    thrust::copy(
+        cpuData_.posq.begin(),
+        cpuData_.posq.end(), 
+        gpuData_.posq.begin());
+}
+
+void Simulation::load_bond_params(System system) {
+    gpuData_.r0.resize(system.get_bondList().r0.size());
+    gpuData_.kb.resize(system.get_bondList().kb.size());
+    gpuData_.pair.resize(system.get_bondList().pair.size());
+
+    thrust::copy(
+        system.get_bondList().r0.begin(), 
+        system.get_bondList().r0.end(), 
+        system.get_bondList().r0.begin());
+
+    thrust::copy(
+        system.get_bondList().kb.begin(), 
+        system.get_bondList().kb.end(), 
+        system.get_bondList().kb.begin());
+
+    thrust::copy(
+        system.get_bondList().pair.begin(), 
+        system.get_bondList().pair.end(), 
+        system.get_bondList().pair.begin());
+}
+
+void Simulation::load_constant_params(System system) {
+    SimParams p = system.get_params();
+
+    cudaMemcpyToSymbol(params_, &p, sizeof(SimParams));
+
 }
 
 void Simulation::read_forcefields(std::string & input_filename) {

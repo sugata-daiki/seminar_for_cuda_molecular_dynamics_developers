@@ -19,10 +19,15 @@ int main(int argc, char* argv[]) {
     simulation.read_forcefields(ff_input);
 
     int N_particles = 10000;
+    int num_steps = 10000;
     float temperature = 300.0;
+    float timestep = 0.01;
+    int seed = 12345;
     float diffusion_coefficient = 10.0;
 
-    system.set_temperature(temperature);
+    simulation.set_timestep(timestep);
+    simulation.set_seed(seed);
+    system.set_params(temperature);
 
     for (int i = 0; i < N_particles; i++) {
         system.add_particle("DNA", diffusion_coefficient, i);
@@ -35,7 +40,7 @@ int main(int argc, char* argv[]) {
         system.add_bond(1.0, 1.0, i, i+1);
     }
 
-    simulation.run(system, 10000000);
+    simulation.run(system, num_steps);
     
     cudaDeviceSynchronize();
 
