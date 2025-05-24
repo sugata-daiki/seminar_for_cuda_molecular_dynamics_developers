@@ -23,7 +23,6 @@ class System : public ParameterManager{
 
         void add_bond(float r0, float kb, int id_i, int id_j);
 
-
     private:
         ParticleDataManager particleDataManager_;
 };

@@ -6,6 +6,7 @@ constexpr float NA = 6.02214076e+23;
 constexpr float pi = 3.1415926535897932385;
 
 typedef struct {
+    float timestep;
     float inv_kbT;
 } SimParams;
 

@@ -24,7 +24,8 @@ typedef struct {
 
 class ParameterManager {
     public:
-        ParameterManager() : next_type_id_(0) {}
+        ParameterManager() : next_type_id_(0) {
+        simParams_.timestep = 0.0f;}
 
     int get_or_assign_particle_type_id(const std::string& type_name) {
         auto it = type_name_to_id_.find(type_name);
@@ -59,8 +60,9 @@ class ParameterManager {
         return diffusion_coefficients_;
     }
 
-    void set_params(float temperature) {
+    void set_params(float temperature, float timestep) {
         simParams_.inv_kbT = 1.0/(1.0e-3*k_b*temperature*NA/4.184);
+        simParams_.timestep = timestep;
     }
 
     SimParams get_params() {

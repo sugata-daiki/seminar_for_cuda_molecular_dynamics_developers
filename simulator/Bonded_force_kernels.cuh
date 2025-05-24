@@ -24,7 +24,7 @@ __global__ void calculateBondedForcesD(
         HarmonicBondInfo harmonicBondInfo_ = harmonicForceField_(bond_idx);
 		pair = harmonicBondInfo_.p;
 		force = harmonicBondInfo_.f;
-
+        
 		atomicAdd(&d_force[pair.x].x, force.x);
 		atomicAdd(&d_force[pair.x].y, force.y);
 		atomicAdd(&d_force[pair.x].z, force.z);

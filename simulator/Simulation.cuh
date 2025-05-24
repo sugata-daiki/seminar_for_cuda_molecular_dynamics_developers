@@ -16,6 +16,7 @@
 #include <algorithm>
 
 #include "System.h"
+#include "Observer.cuh"
 #include "Containers.cuh"
 #include "cudaSystem.cuh"
 
@@ -25,11 +26,7 @@ class Simulation {
         Simulation() {};
         ~Simulation() {};
 
-        void run(System system, int num_steps);
-
-        void set_timestep(float timestep) {
-            cpuData_.timestep = timestep;
-        }
+        void run(System system, Observer & observer, int num_steps);
 
         void set_seed(int seed) {
             cpuData_.seed = seed;
@@ -60,7 +57,7 @@ class Simulation {
         CpuData cpuData_;
 };
 
-void Simulation::run(System system, int num_steps) {
+void Simulation::run(System system, Observer & observer, int num_steps) {
 
     load_positions();
 
@@ -86,6 +83,9 @@ void Simulation::run(System system, int num_steps) {
     std::cout << "simulation start!" << std::endl;
     // run simulation
     for (int i = 0; i < num_steps; i++) {
+        if (i % observer.get_output_period() == 0) {
+            observer.CoordObserver(gpuData_, cpuData_);
+        }
         // bonded interaction
         calculateBondedForcesH(gpuData_, cpuData_);
         BrownianIntegratorH(gpuData_, cpuData_);
@@ -115,10 +115,6 @@ void Simulation::set_random_states() {
 }
 
 void Simulation::load_diffusion_coefficients(const std::vector<float> & diffusion_coefficients) {
-    if (cpuData_.timestep == 0.0) {
-        std::cerr << "[ error ]: Please set timestep." << std::endl;
-        exit(-1);
-    }
 
     gpuData_.diffusion_coefficient.resize(diffusion_coefficients.size());
     thrust::copy(
@@ -141,24 +137,30 @@ void Simulation::load_bond_params(System system) {
     gpuData_.kb.resize(system.get_bondList().kb.size());
     gpuData_.pair.resize(system.get_bondList().pair.size());
 
-    thrust::copy(
-        system.get_bondList().r0.begin(), 
-        system.get_bondList().r0.end(), 
-        system.get_bondList().r0.begin());
+    bond_SOA b = system.get_bondList();
 
     thrust::copy(
-        system.get_bondList().kb.begin(), 
-        system.get_bondList().kb.end(), 
-        system.get_bondList().kb.begin());
+        b.r0.begin(), 
+        b.r0.end(), 
+        gpuData_.r0.begin());
 
     thrust::copy(
-        system.get_bondList().pair.begin(), 
-        system.get_bondList().pair.end(), 
-        system.get_bondList().pair.begin());
+        b.kb.begin(), 
+        b.kb.end(), 
+        gpuData_.kb.begin());
+
+    thrust::copy(
+        b.pair.begin(), 
+        b.pair.end(), 
+        gpuData_.pair.begin());
 }
 
 void Simulation::load_constant_params(System system) {
     SimParams p = system.get_params();
+
+    if (p.timestep == 0.0) {
+        std::cerr << "[ error ]: Please set timestep." << std::endl;
+    }
 
     cudaMemcpyToSymbol(params_, &p, sizeof(SimParams));
 

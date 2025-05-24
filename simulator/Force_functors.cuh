@@ -34,7 +34,7 @@ struct HarmonicBondForceField {
 
 		float4 posq_i = device_posq[pair_index.x];
 		float4 posq_j = device_posq[pair_index.y];
-		
+
 		float3 pos_i = {posq_i.x, posq_i.y, posq_i.z};
 		float3 pos_j = {posq_j.x, posq_j.y, posq_j.z};
 
@@ -44,7 +44,7 @@ struct HarmonicBondForceField {
 		
 		HarmonicBondInfo harmonicBondInfo_;
 		harmonicBondInfo_.p = device_pair[bond_idx];
-	       	harmonicBondInfo_.f = (r0*inv_r - 1.0)*kb*rel_coord;
+	    harmonicBondInfo_.f = (r0*inv_r - 1.0)*kb*rel_coord;
 		return harmonicBondInfo_;
 	}
 };

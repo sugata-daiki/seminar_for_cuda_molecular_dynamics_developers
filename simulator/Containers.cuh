@@ -19,7 +19,6 @@ typedef struct {
 typedef struct {
     thrust::host_vector<float4> posq;
     EnableBondedForceFields EnableBondedForceFields_;
-    float timestep = 0.0;
     int seed = 0;
     int num_particles = 0;
     int num_bonds;

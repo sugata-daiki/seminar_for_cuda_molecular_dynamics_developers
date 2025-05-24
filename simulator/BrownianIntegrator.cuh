@@ -26,11 +26,11 @@ __global__ void BrownianIntegratorD(
 
     float4 posq = d_posq[particle_idx];
     float diffusion_coefficient = d_diffusion_coefficient[particle_idx];
-    float3 pos = diffusion_coefficient*params_.inv_kbT*d_force[particle_idx] + diffusion_coefficient*make_float3(
+    float3 pos = params_.timestep*diffusion_coefficient*params_.inv_kbT*d_force[particle_idx] + sqrtf(2.0*diffusion_coefficient*params_.timestep)*make_float3(
             curand_normal(&localState), 
             curand_normal(&localState), 
             curand_normal(&localState))
-        + make_float3(posq.x, posq.y, posq.z);
+        + make_float3(posq.x, posq.y, posq.z) ;
 
     d_states[particle_idx] = localState;
 
