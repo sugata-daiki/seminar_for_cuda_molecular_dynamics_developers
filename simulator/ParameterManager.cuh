@@ -60,7 +60,7 @@ class ParameterManager {
     }
 
     void set_params(float temperature) {
-        simParams_.inv_kbT = 1.0/(k_b*temperature);
+        simParams_.inv_kbT = 1.0/(1.0e-3*k_b*temperature*NA/4.184);
     }
 
     SimParams get_params() {
