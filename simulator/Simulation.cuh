@@ -74,6 +74,16 @@ void Simulation::run(System system, int num_steps) {
 
     set_random_states();
 
+    cudaEvent_t start, stop;
+
+    float elapsedTime;
+
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start, 0);
+    
+    std::cout << "simulation start!" << std::endl;
     // run simulation
     for (int i = 0; i < num_steps; i++) {
         // bonded interaction
@@ -81,6 +91,14 @@ void Simulation::run(System system, int num_steps) {
         BrownianIntegratorH(gpuData_, cpuData_);
 
     }
+
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+
+
+    cudaEventElapsedTime(&elapsedTime, start, stop);
+    std::cout << "execution time: " << 1e-3*elapsedTime << " [sec]" << std::endl;
+
 
 }
 
